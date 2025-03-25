@@ -1,0 +1,12 @@
+names:
+- kickboard
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: -xmwyd
+  url: https://universe.roboflow.com/kickbord/-xmwyd/dataset/5
+  version: 5
+  workspace: kickbord
+test: ../test/images
+train: ../train/images
+val: ../valid/images

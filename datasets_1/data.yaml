@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 4
+names: ['beam', 'dear', 'gcooter', 'others']
+
+roboflow:
+  workspace: kickbord
+  project: electric-kick-board-vjfvv
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/kickbord/electric-kick-board-vjfvv/dataset/1
