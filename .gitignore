@@ -1,0 +1,7 @@
+.env
+datasets_1/train/
+datasets_1/test/
+datasets_1/valid/
+datasets_2/train/
+datasets_2/test/
+datasets_2/valid/
