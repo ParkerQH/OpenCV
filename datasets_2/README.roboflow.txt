@@ -1,8 +1,8 @@
 
-킥보드 사진 데이터 - v5 2025-03-25 12:35am
+킥보드 - v1 2025-03-31 8:37am
 ==============================
 
-This dataset was exported via roboflow.com on March 24, 2025 at 3:38 PM GMT
+This dataset was exported via roboflow.com on March 30, 2025 at 11:37 PM GMT
 
 Roboflow is an end-to-end computer vision platform that helps you
 * collaborate with your team on computer vision projects
@@ -17,7 +17,7 @@ visit https://github.com/roboflow/notebooks
 
 To find over 100k other datasets and pre-trained models, visit https://universe.roboflow.com
 
-The dataset includes 1166 images.
+The dataset includes 1155 images.
 Kickboard are annotated in YOLOv8 format.
 
 The following pre-processing was applied to each image:

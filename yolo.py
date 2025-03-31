@@ -8,7 +8,7 @@ from ultralytics import YOLO
 model = YOLO("runs/detect/train/weights/best.pt")  # .pt 모델 파일 경로로 변경
 
 # 이미지 로드
-image_path = "image/pic12.jpg"  # 분석할 이미지 경로
+image_path = "image/pic1.jpg"  # 분석할 이미지 경로
 image = cv2.imread(image_path)
 
 # 모델을 통해 이미지 분석
