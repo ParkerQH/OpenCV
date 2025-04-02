@@ -1,4 +1,7 @@
 .env
+datasets/train/
+datasets/test/
+datasets/valid/
 Kickboard_1/train/
 Kickboard_1/test/
 Kickboard_1/valid/
