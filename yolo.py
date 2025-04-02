@@ -6,10 +6,10 @@ import os
 
 # YOLOv8 모델 로드
 from ultralytics import YOLO
-model = YOLO("runs/detect/train/weights/best.pt")  # .pt 모델 파일 경로로 변경
+model = YOLO("runs/detect/train/weights/best.pt")
 
 # 이미지 폴더 경로
-image_folder_path = "image"  # 분석할 이미지 폴더 경로
+image_folder_path = "image"
 
 # 폴더 내의 모든 이미지 파일 경로
 image_paths = [os.path.join(image_folder_path, file) 
