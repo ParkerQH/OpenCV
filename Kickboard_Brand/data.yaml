@@ -8,6 +8,6 @@ names: ['beam', 'dear', 'gcooter', 'others']
 roboflow:
   workspace: kickbord
   project: electric-kick-board-vjfvv
-  version: 1
+  version: 3
   license: CC BY 4.0
-  url: https://universe.roboflow.com/kickbord/electric-kick-board-vjfvv/dataset/1
+  url: https://universe.roboflow.com/kickbord/electric-kick-board-vjfvv/dataset/3
