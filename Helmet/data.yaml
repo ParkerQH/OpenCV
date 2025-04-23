@@ -1,0 +1,13 @@
+names:
+- helmet
+- object
+nc: 2
+roboflow:
+  license: CC BY 4.0
+  project: helmet-dxttm
+  url: https://universe.roboflow.com/kickbord/helmet-dxttm/dataset/2
+  version: 2
+  workspace: kickbord
+test: ../test/images
+train: ../train/images
+val: ../valid/images
