@@ -1,7 +1,7 @@
 task: detect
 mode: train
 model: yolo11s.pt
-data: Kickboard_Brand/data.yaml
+data: D:\My fold\Uni\Study\4학년\1학기\심화_캡스톤_디자인\AI\YOLO11-Brand\Kickboard_Brand\data.yaml
 epochs: 50
 time: null
 patience: 100
@@ -10,7 +10,7 @@ imgsz: 640
 save: true
 save_period: -1
 cache: false
-device: null
+device: 0
 workers: 8
 project: null
 name: train
