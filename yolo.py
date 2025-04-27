@@ -6,7 +6,7 @@ import os
 
 # YOLOv8 모델 로드
 from ultralytics import YOLO
-model = YOLO("runs/detect/train/weights/best.pt")
+model = YOLO("runs/detect/train3/weights/best.pt")
 
 # 이미지 폴더 경로
 image_folder_path = "image"
