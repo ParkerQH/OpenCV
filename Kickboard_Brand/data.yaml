@@ -2,12 +2,12 @@ train: ../train/images
 val: ../valid/images
 test: ../test/images
 
-nc: 4
-names: ['beam', 'dear', 'gcooter', 'others']
+nc: 8
+names: ['alpaca', 'beam', 'dart', 'deer', 'gcooter', 'others', 'swing', 'xingxing']
 
 roboflow:
   workspace: kickbord
-  project: electric-kick-board-vjfvv
-  version: 3
+  project: kick-ht8sb
+  version: 2
   license: CC BY 4.0
-  url: https://universe.roboflow.com/kickbord/electric-kick-board-vjfvv/dataset/3
+  url: https://universe.roboflow.com/kickbord/kick-ht8sb/dataset/2
