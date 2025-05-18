@@ -9,7 +9,7 @@ report_id = now.strftime('%Y%m%d%H%M%S%f')
 user_id = 'admin'
 
 # 업로드할 파일 경로
-local_file_path = 'image/ex/KakaoTalk_20250518_171537204_01.jpg'
+local_file_path = 'image/pic1.jpg'
 
 # 파일 확장자 추출
 _, file_extension = os.path.splitext(local_file_path)
