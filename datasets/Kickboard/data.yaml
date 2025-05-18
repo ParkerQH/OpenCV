@@ -1,0 +1,13 @@
+names:
+- '0'
+- kickboard
+nc: 2
+roboflow:
+  license: CC BY 4.0
+  project: -lfqkf
+  url: https://universe.roboflow.com/kickbord/-lfqkf/dataset/1
+  version: 1
+  workspace: kickbord
+test: ../test/images
+train: ../train/images
+val: ../valid/images

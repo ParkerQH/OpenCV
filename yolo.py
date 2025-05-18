@@ -1,29 +1,90 @@
-from roboflow import Roboflow
-from dotenv import load_dotenv
 import cv2
 import numpy as np
 import os
-
-# YOLOv8 모델 로드
+import tempfile
+import time
+import firebase_config
+from firebase_admin import db, storage
 from ultralytics import YOLO
-model = YOLO("runs/detect/train3/weights/best.pt")
 
-# 이미지 폴더 경로
-image_folder_path = "image"
+# YOLOv11s 모델 로드
+model = YOLO("runs/detect/train_yolov11s/weights/best.pt")
 
-# 폴더 내의 모든 이미지 파일 경로
-image_paths = [os.path.join(image_folder_path, file) 
-               for file in os.listdir(image_folder_path) 
-               if file.endswith(".jpg") or file.endswith(".png") or file.endswith(".jpeg")]
+def process_image(file_url):
+    # 임시 파일 생성
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+    try:
+        # 이미지 다운로드
+        bucket = storage.bucket()
+        blob = bucket.blob(f'report/{file_url}')
+        blob.download_to_filename(temp_file.name)
 
-# 폴더 내의 모든 이미지 파일 분석
-for image_path in image_paths:
-    # 이미지 로드
-    image = cv2.imread(image_path)
+        # 파일 잠금 방지 읽기
+        with open(temp_file.name, 'rb') as f:
+            image_data = f.read()
+        image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
+
+        # YOLO 분석 및 결과 표시
+        results = model(image, conf=0.8)
+        annotated_image = results[0].plot()
+
+        # 가장 높은 confidence 값 추출
+        boxes = results[0].boxes
+        if len(boxes) == 0:
+            top_confidence = 0.0
+            top_class = "No detection"
+        else:
+            confidences = boxes.conf.cpu().numpy()
+            class_ids = boxes.cls.cpu().numpy().astype(int)
+            max_idx = np.argmax(confidences)
+            top_confidence = float(confidences[max_idx])
+            top_class = model.names[class_ids[max_idx]]
+
+        # 분석 이미지 저장 (Storage)
+        conclusion_blob = bucket.blob(f'conclusion/{file_url}')
+        _, temp_annotated = tempfile.mkstemp(suffix='.jpg')
+        cv2.imwrite(temp_annotated, annotated_image)
+        conclusion_blob.upload_from_filename(temp_annotated)
+        conclusion_url = conclusion_blob.public_url
+
+        conclusion_ref = db.reference(f'Conclusion/{os.path.splitext(file_url)[0]}')
+        conclusion_data = {
+            'violation': "헬멧미착용",
+            'confidence': top_confidence,   # confidence score
+            'detectedBrand': top_class,
+            'imageUrl': conclusion_url,
+        }
+        conclusion_ref.set(conclusion_data)
+
+        print(f"✅ Processed image: {file_url}\n")
+
+        ref
+    finally:
+        # 파일 삭제 재시도 로직
+        for _ in range(3):
+            try:
+                os.unlink(temp_file.name)
+                break
+            except PermissionError:
+                time.sleep(0.3)
+
+
+# 실시간 리스너 설정
+def callback(event):
+    report_id = event.path.split('/')[-1]
+    report_data = event.data
     
-    # 모델을 통해 이미지 분석
-    results = model(image)
+    if report_data and 'file' in report_data:
+        print(f"New report detected! ID: {report_id}")
+        process_image(report_data['file'])
+
+if __name__ == "__main__":
+    ref = db.reference('Report')
+    ref.listen(callback)
+    print("🔥 실시간 감지를 시작합니다. 종료 : Ctrl+C 🔥")
     
-    # 분석 결과 출력
-    results[0].show()  # 결과를 화면에 표시
-    print(f"Image: {image_path} processed.")
+    try:
+        while True:
+            time.sleep(1)  # CPU 사용량 최적화
+    except KeyboardInterrupt:
+        print("\n 실시간 감지를 중지합니다!")

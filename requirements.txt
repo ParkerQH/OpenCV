@@ -1,0 +1,3 @@
+firebase-admin
+pyrebase4
+firebase-admin opencv-python ultralytics
