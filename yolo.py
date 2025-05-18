@@ -9,7 +9,7 @@ from ultralytics import YOLO
 model = YOLO("runs/detect/train_yolov11s/weights/best.pt")
 
 # 이미지 폴더 경로
-image_folder_path = "image/ex"
+image_folder_path = "image"
 
 # 폴더 내의 모든 이미지 파일 경로
 image_paths = [os.path.join(image_folder_path, file) 
@@ -21,8 +21,8 @@ for image_path in image_paths:
     # 이미지 로드
     image = cv2.imread(image_path)
     
-    # 모델을 통해 이미지 분석
-    results = model(image)
+    # 모델을 통해 이미지 분석, confidence score >= 0.8
+    results = model(image, conf=0.8)
     
     # 분석 결과 출력
     results[0].show()  # 결과를 화면에 표시
