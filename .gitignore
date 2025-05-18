@@ -7,4 +7,4 @@ datasets/Kickboard_Brand/test/
 datasets/Kickboard_Brand/valid/
 serviceAccountKey.json
 config.py
-firbase_config.py
+firebase_config.py
