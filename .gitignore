@@ -6,3 +6,4 @@ datasets/Kickboard_Brand/train/
 datasets/Kickboard_Brand/test/
 datasets/Kickboard_Brand/valid/
 serviceAccountKey.json
+config.py
