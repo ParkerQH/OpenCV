@@ -1,7 +1,6 @@
-# 임시 신고 내역 입력기
 import os
 import firebase_config
-from firebase_admin import credentials, db, storage
+from firebase_admin import credentials, storage, firestore
 from datetime import datetime
 
 now = datetime.now()
@@ -24,16 +23,17 @@ blob.upload_from_filename(local_file_path)
 blob.make_public()
 file_url = blob.public_url
 
-ref = db.reference('Report')
-report = ref.get()
+# Firestore 클라이언트 가져오기
+db_fs = firestore.client()
 
 data = {
     'date': '2025-05-18',
     'file': f'{report_id}_{user_id}{file_extension}',
     'violation': '헬멧 미착용',
     'about': '헬멧 미착용으로 신고',
-    'place':'화성시 동탄순환대로',
-    'file_url':file_url
+    'place': '화성시 동탄순환대로',
+    'file_url': file_url
 }
 
-ref.child(report_id).set(data)
+# Firestore에 저장 (컬렉션: Report, 문서: report_id)
+db_fs.collection('Report').document(report_id).set(data)
