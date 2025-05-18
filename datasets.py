@@ -8,6 +8,6 @@ load_dotenv()
 # Roboflow API 키로 데이터셋 다운로드
 api_key = os.getenv('MY_API_KEY') 
 rf = Roboflow(api_key=api_key)
-project = rf.workspace("kickbord").project("kick-ht8sb")
-version = project.version(2)
+project = rf.workspace("kickbord").project("")
+version = project.version()
 dataset = version.download("yolov11")

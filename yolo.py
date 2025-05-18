@@ -1,12 +1,12 @@
-from roboflow import Roboflow
-from dotenv import load_dotenv
 import cv2
 import numpy as np
 import os
+from roboflow import Roboflow
+from dotenv import load_dotenv
 
 # YOLOv8 모델 로드
 from ultralytics import YOLO
-model = YOLO("runs/detect/train_yolov8n/weights/best.pt")
+model = YOLO("runs/detect/train_yolov11s/weights/best.pt")
 
 # 이미지 폴더 경로
 image_folder_path = "image/ex"
