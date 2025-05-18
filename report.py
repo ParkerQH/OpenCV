@@ -1,6 +1,6 @@
 # 임시 신고 내역 입력기
 import os
-import firbase_config
+import firebase_config
 from firebase_admin import credentials, db, storage
 from datetime import datetime
 
@@ -32,6 +32,7 @@ data = {
     'file': f'{report_id}_{user_id}{file_extension}',
     'violation': '헬멧 미착용',
     'about': '헬멧 미착용으로 신고',
+    'place':'화성시 동탄순환대로',
     'file_url':file_url
 }
 

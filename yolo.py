@@ -26,10 +26,37 @@ def process_image(file_url):
 
         # YOLO 분석 및 결과 표시
         results = model(image, conf=0.8)
-        results[0].show()  # GUI 표시
-        time.sleep(0.5)  # GUI 초기화 대기
+        annotated_image = results[0].plot()
 
-        print(f"Processed image: {file_url}\n")
+        # 가장 높은 confidence 값 추출
+        boxes = results[0].boxes
+        if len(boxes) == 0:
+            top_confidence = 0.0
+            top_class = "No detection"
+        else:
+            confidences = boxes.conf.cpu().numpy()
+            class_ids = boxes.cls.cpu().numpy().astype(int)
+            max_idx = np.argmax(confidences)
+            top_confidence = float(confidences[max_idx])
+            top_class = model.names[class_ids[max_idx]]
+
+        # 분석 이미지 저장 (Storage)
+        conclusion_blob = bucket.blob(f'conclusion/{file_url}')
+        _, temp_annotated = tempfile.mkstemp(suffix='.jpg')
+        cv2.imwrite(temp_annotated, annotated_image)
+        conclusion_blob.upload_from_filename(temp_annotated)
+        conclusion_url = conclusion_blob.public_url
+
+        conclusion_ref = db.reference(f'Conclusion/{os.path.splitext(file_url)[0]}')
+        conclusion_data = {
+            'violation': "헬멧미착용",
+            'confidence': top_confidence,   # confidence score
+            'detectedBrand': top_class,
+            'imageUrl': conclusion_url,
+        }
+        conclusion_ref.set(conclusion_data)
+
+        print(f"✅ Processed image: {file_url}\n")
 
         ref
     finally:
