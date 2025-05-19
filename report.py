@@ -8,7 +8,7 @@ report_id = now.strftime('%Y%m%d%H%M%S%f')
 user_id = 'admin'
 
 # 업로드할 파일 경로
-local_file_path = 'image/pic1.jpg'
+local_file_path = 'image/ex/KakaoTalk_20250518_171537204_03.jpg'
 
 # 파일 확장자 추출
 _, file_extension = os.path.splitext(local_file_path)
@@ -31,6 +31,7 @@ data = {
     'file': f'{report_id}_{user_id}{file_extension}',
     'violation': '헬멧 미착용',
     'about': '헬멧 미착용으로 신고',
+    'gpsInfo' : '위도: 37.2792405 경도: 127.0296529',
     'place': '화성시 동탄순환대로',
     'file_url': file_url
 }
