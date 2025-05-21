@@ -38,3 +38,6 @@ data = {
 
 # Firestore에 저장 (컬렉션: Report, 문서: report_id)
 db_fs.collection('Report').document(report_id).set(data)
+
+# 37.1816925 127.1225065 / 
+# 37.3010981 127.0376259 / 경기 수원시 영통구 광교산로 154-42
