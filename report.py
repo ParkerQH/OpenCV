@@ -78,7 +78,7 @@ db_fs = firestore.client()
 data = {
     "date": date,
     "gpsInfo": f"{lat} {lon}",
-    "file_url": file_url,
+    "imageUrl": file_url,
 }
 
 # Firestore에 저장 (컬렉션: Report, 문서: report_id)
