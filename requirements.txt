@@ -1,3 +1,6 @@
 firebase-admin
 pyrebase4
 firebase-admin opencv-python ultralytics
+pillow
+pillow requests
+geopy
