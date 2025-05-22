@@ -17,7 +17,7 @@ def process_image(file_url):
     try:
         # 이미지 다운로드
         bucket = storage.bucket()
-        blob = bucket.blob(f'report/{file_url}')
+        blob = bucket.blob(file_url)
         blob.download_to_filename(temp_file.name)
 
         # 파일 잠금 방지 읽기
@@ -78,9 +78,9 @@ def process_image(file_url):
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):
     # 초기 스냅샷은 무시 (최초 1회 실행 시 건너뜀)
-    if not hasattr(on_snapshot, "initialized"):
-        on_snapshot.initialized = True
-        return
+    # if not hasattr(on_snapshot, "initialized"):
+    #     on_snapshot.initialized = True
+    #     return
     
     for change in changes:
         if change.type.name == 'ADDED':  # 새 문서가 추가될 때만 반응
@@ -89,7 +89,7 @@ def on_snapshot(col_snapshot, changes, read_time):
             
             if 'file' in doc_data:
                 print(f"🔥 New Firestore report: {doc_id}")
-                process_image(doc_data['file'])
+                process_image(doc_data['file_url'])
 
 if __name__ == "__main__":
     # Firestore 클라이언트 초기화
