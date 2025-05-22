@@ -7,8 +7,6 @@ from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 from dotenv import load_dotenv
 
-now = datetime.now()
-date = now
 report_id = uuid.uuid4().hex
 user_id = "admin"
 
@@ -76,7 +74,7 @@ lat, lon = get_lat_lon(exif)
 db_fs = firestore.client()
 
 data = {
-    "date": date,
+    "date": datetime.now(),
     "gpsInfo": f"{lat} {lon}",
     "imageUrl": file_url,
 }
