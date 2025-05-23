@@ -10,9 +10,17 @@ from google.cloud.firestore import Client as FirestoreClient
 from ultralytics import YOLO
 from datetime import datetime
 from dotenv import load_dotenv
+from inference_sdk import InferenceHTTPClient
 
 # YOLOv11s 모델 로드
 model = YOLO("runs/detect/train_yolov11s/weights/best.pt")
+
+#Roboflow Inference API 설정
+load_dotenv()
+CLIENT = InferenceHTTPClient(
+    api_url="https://detect.roboflow.com",
+    api_key= os.environ.get('ROBOFLOW_API_KEY')
+)
 
 
 def process_image(imageUrl, doc_id):
@@ -26,6 +34,57 @@ def process_image(imageUrl, doc_id):
         image = cv2.imdecode(
             np.frombuffer(response.content, np.uint8), cv2.IMREAD_COLOR
         )
+
+        #temp에 넣은 이미지 전처리
+        h, w = image.shape[:2]
+        if h > w :
+            resized = cv2.resize(image, (500,700), interpolation=cv2.INTER_AREA)
+        else :
+            resized = cv2.resize(image, (500,500), interpolation=cv2.INTER_AREA)
+        img = resized.copy()
+
+        #헬멧 착용여부 판단
+        result_kickboard = CLIENT.infer(resized, model_id="kickboard-22-jt3v1/1")
+        print('result: ', result_kickboard)
+
+        helmet_status = None
+        traffic_violation_detection = '위반사항 없음'
+        result_helmet = None
+        top_helmet_confidence = 0.0
+
+        if any(item['confidence'] > 0.1 for item in result_kickboard['predictions']) :
+
+            result_person = CLIENT.infer(resized, model_id="person-469rx-3u095/1")
+            print('result: ', result_person)
+
+
+            if any(item['confidence'] > 0.1 for item in result_person['predictions']) :
+
+                result_helmet = CLIENT.infer(resized, model_id="helmet-nw6lg-i02zn/1")
+                print('result: ', result_helmet)
+
+                if any(item['confidence'] > 0.1 for item in result_helmet['predictions'])  :
+                    helmet_status = '착용'
+                    img = object_detection(result_helmet['predictions'], resized)
+                else:
+                    helmet_status = '미착용'
+                    traffic_violation_detection = '헬멧 미착용'
+                
+                helmet_preds = result_helmet.get("predictions", [])
+
+                if helmet_preds:
+                    confidences = [p["confidence"] for p in helmet_preds]
+                    top_helmet_confidence = max(confidences)
+                else:
+                    top_helmet_confidence = 0.0
+            else:
+                traffic_violation_detection = '사람 감지 실패'
+                #return jsonify({'위반 감지': traffic_violation_detection})
+        else:
+            traffic_violation_detection = '킥보드 감지 실패'
+            #return jsonify({'위반 감지': traffic_violation_detection})
+        
+        
 
         # YOLO 분석 및 결과 표시
         results = model(image, conf=0.8)
@@ -50,12 +109,11 @@ def process_image(imageUrl, doc_id):
 
         # 임시 파일 생성 (분석 이미지용)
         _, temp_annotated = tempfile.mkstemp(suffix=".jpg")
-        cv2.imwrite(temp_annotated, annotated_image)
+        cv2.imwrite(temp_annotated, img)
         conclusion_blob.upload_from_filename(temp_annotated)
         conclusion_url = conclusion_blob.public_url
 
         # 사진 지번 주소 출력
-        load_dotenv()
         api_key = os.getenv("VWorld_API")
         db_fs = firestore.client()
         doc_ref = db_fs.collection("Report").document(doc_id)
@@ -73,8 +131,8 @@ def process_image(imageUrl, doc_id):
         doc_id = f"conclusion_{file_name.split('.')[0]}"  # 문서 ID 생성
         conclusion_data = {
             "date" : datetime.now(),
-            "violation": "헬멧미착용",
-            "confidence": top_confidence,
+            "violation": traffic_violation_detection,
+            "confidence": top_helmet_confidence,
             "detectedBrand": top_class,
             "imageUrl": conclusion_url,
             "region": parcel_addr,
@@ -121,9 +179,9 @@ def reverse_geocode(lat, lon, api_key):
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):
     # 초기 스냅샷은 무시 (최초 1회 실행 시 건너뜀)
-    if not hasattr(on_snapshot, "initialized"):
-        on_snapshot.initialized = True
-        return
+    # if not hasattr(on_snapshot, "initialized"):
+    #     on_snapshot.initialized = True
+    #     return
 
     for change in changes:
         if change.type.name == "ADDED":  # 새 문서가 추가될 때만 반응
@@ -133,6 +191,29 @@ def on_snapshot(col_snapshot, changes, read_time):
             if "imageUrl" in doc_data:
                 print(f"🔥 새로운 신고 감지  : {doc_id}")
                 process_image(doc_data["imageUrl"], doc_id)
+
+
+def object_detection(predictions, img):
+    for prediction in predictions:
+        centerx = int(prediction['x'])
+        centery = int(prediction['y'])
+        symmetric = int(prediction['width'])/2
+        horizontal = int(prediction['height'])/2
+        
+        x1 = int(centerx - symmetric)
+        y1 = int(centery - horizontal)
+        x2 =  int(centerx + symmetric)
+        y2 =  int(centery + horizontal)
+        
+        label = prediction['class']
+        #label = str('Helmet')
+        conf = prediction['confidence']
+        #conf = 0.84
+        text = str(label) + ' ' + str(conf)
+
+        cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 2)
+        cv2.putText(img, text, (x1+5, y1+20 ), cv2.FONT_HERSHEY_PLAIN, 1.2, (255, 0, 255), 1)
+    return img
 
 
 if __name__ == "__main__":
