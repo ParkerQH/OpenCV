@@ -6,6 +6,7 @@ from datetime import datetime
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 from dotenv import load_dotenv
+import pytz
 
 report_id = uuid.uuid4().hex
 user_id = "admin"
@@ -70,11 +71,14 @@ def get_lat_lon(exif_data):
 exif = get_exif_data(local_file_path)
 lat, lon = get_lat_lon(exif)
 
+# 한국 시간대 객체 생성
+kst = pytz.timezone('Asia/Seoul')
+
 # Firestore 클라이언트 가져오기
 db_fs = firestore.client()
 
 data = {
-    "date": datetime.now(),
+    "date": datetime.now(kst),
     "gpsInfo": f"{lat} {lon}",
     "imageUrl": file_url,
 }
