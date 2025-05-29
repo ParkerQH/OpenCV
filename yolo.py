@@ -23,7 +23,7 @@ CLIENT = InferenceHTTPClient(
 )
 
 
-def process_image(imageUrl, doc_id):
+def process_image(imageUrl, date, doc_id):
     temp_annotated = None  # 초기화
     try:
         # 이미지 다운로드
@@ -130,13 +130,14 @@ def process_image(imageUrl, doc_id):
         # Firestore에 결과 저장
         doc_id = f"conclusion_{file_name.split('.')[0]}"  # 문서 ID 생성
         conclusion_data = {
-            "date" : datetime.now(),
+            "date" : date,
             "violation": traffic_violation_detection,
             "confidence": top_helmet_confidence,
             "detectedBrand": top_class,
             "imageUrl": conclusion_url,
             "region": parcel_addr,
             "gpsInfo": f"{lat} {lon}",
+            "result": "미확인"
         }
         db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
 
@@ -179,9 +180,9 @@ def reverse_geocode(lat, lon, api_key):
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):
     # 초기 스냅샷은 무시 (최초 1회 실행 시 건너뜀)
-    # if not hasattr(on_snapshot, "initialized"):
-    #     on_snapshot.initialized = True
-    #     return
+    if not hasattr(on_snapshot, "initialized"):
+        on_snapshot.initialized = True
+        return
 
     for change in changes:
         if change.type.name == "ADDED":  # 새 문서가 추가될 때만 반응
@@ -190,7 +191,7 @@ def on_snapshot(col_snapshot, changes, read_time):
 
             if "imageUrl" in doc_data:
                 print(f"🔥 새로운 신고 감지  : {doc_id}")
-                process_image(doc_data["imageUrl"], doc_id)
+                process_image(doc_data["imageUrl"], doc_data["date"], doc_id)
 
 
 def object_detection(predictions, img):
