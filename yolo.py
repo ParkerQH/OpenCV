@@ -105,7 +105,7 @@ def process_image(imageUrl, doc_id):
         # 분석 이미지 저장 (Storage)
         bucket = storage.bucket()
         file_name = imageUrl.split("/")[-1]  # URL에서 파일명 추출
-        conclusion_blob = bucket.blob(f"conclusion/{file_name}")
+        conclusion_blob = bucket.blob(f"conclusion_raspberry/{file_name}")
 
         # 임시 파일 생성 (분석 이미지용)
         _, temp_annotated = tempfile.mkstemp(suffix=".jpg")
@@ -116,7 +116,7 @@ def process_image(imageUrl, doc_id):
         # 사진 지번 주소 출력
         api_key = os.getenv("VWorld_API")
         db_fs = firestore.client()
-        doc_ref = db_fs.collection("Report").document(doc_id)
+        doc_ref = db_fs.collection("Report_Raspberry").document(doc_id)
         doc = doc_ref.get()
         if doc.exists:
             doc_data = doc.to_dict()
@@ -138,7 +138,7 @@ def process_image(imageUrl, doc_id):
             "region": parcel_addr,
             "gpsInfo": f"{lat} {lon}",
         }
-        db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
+        db_fs.collection("Conclusion_raspberry").document(doc_id).set(conclusion_data)
 
         print(f"✅ 분석된 사진 url : {imageUrl}\n")
 
@@ -179,9 +179,9 @@ def reverse_geocode(lat, lon, api_key):
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):
     # 초기 스냅샷은 무시 (최초 1회 실행 시 건너뜀)
-    # if not hasattr(on_snapshot, "initialized"):
-    #     on_snapshot.initialized = True
-    #     return
+    if not hasattr(on_snapshot, "initialized"):
+        on_snapshot.initialized = True
+        return
 
     for change in changes:
         if change.type.name == "ADDED":  # 새 문서가 추가될 때만 반응
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     db_fs: FirestoreClient = firestore.client()
 
     # Report 컬렉션 감시 시작
-    report_col = db_fs.collection("Report")
+    report_col = db_fs.collection("Report_Raspberry")
     listener = report_col.on_snapshot(on_snapshot)
 
     print("🔥 Firestore 실시간 감지 시작 (종료: Ctrl+C) 🔥")

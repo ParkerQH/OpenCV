@@ -27,48 +27,48 @@ blob.make_public()
 file_url = blob.public_url
 
 # 위도경도 추출
-def get_exif_data(image_path):
-    image = Image.open(image_path)
-    exif_data = image._getexif()
-    if not exif_data:
-        return None
-    exif = {}
-    for tag, value in exif_data.items():
-        decoded = TAGS.get(tag, tag)
-        if decoded == "GPSInfo":
-            gps_data = {}
-            for t in value:
-                sub_decoded = GPSTAGS.get(t, t)
-                gps_data[sub_decoded] = value[t]
-            exif[decoded] = gps_data
-        else:
-            exif[decoded] = value
-    return exif
+# def get_exif_data(image_path):
+#     image = Image.open(image_path)
+#     exif_data = image._getexif()
+#     if not exif_data:
+#         return None
+#     exif = {}
+#     for tag, value in exif_data.items():
+#         decoded = TAGS.get(tag, tag)
+#         if decoded == "GPSInfo":
+#             gps_data = {}
+#             for t in value:
+#                 sub_decoded = GPSTAGS.get(t, t)
+#                 gps_data[sub_decoded] = value[t]
+#             exif[decoded] = gps_data
+#         else:
+#             exif[decoded] = value
+#     return exif
 
-def get_lat_lon(exif_data):
-    def _convert_to_degrees(value):
-        # IFDRational 객체를 float로 변환
-        d = float(value[0])
-        m = float(value[1])
-        s = float(value[2])
-        return d + m/60 + s/3600
+# def get_lat_lon(exif_data):
+#     def _convert_to_degrees(value):
+#         # IFDRational 객체를 float로 변환
+#         d = float(value[0])
+#         m = float(value[1])
+#         s = float(value[2])
+#         return d + m/60 + s/3600
 
-    gps_info = exif_data.get("GPSInfo")
-    if not gps_info:
-        return None, None
+#     gps_info = exif_data.get("GPSInfo")
+#     if not gps_info:
+#         return None, None
     
-    lat = _convert_to_degrees(gps_info["GPSLatitude"])
-    if gps_info["GPSLatitudeRef"] != "N":
-        lat = -lat
+#     lat = _convert_to_degrees(gps_info["GPSLatitude"])
+#     if gps_info["GPSLatitudeRef"] != "N":
+#         lat = -lat
         
-    lon = _convert_to_degrees(gps_info["GPSLongitude"])
-    if gps_info["GPSLongitudeRef"] != "E":
-        lon = -lon
+#     lon = _convert_to_degrees(gps_info["GPSLongitude"])
+#     if gps_info["GPSLongitudeRef"] != "E":
+#         lon = -lon
         
-    return lat, lon
+#     return lat, lon
 
-exif = get_exif_data(local_file_path)
-lat, lon = get_lat_lon(exif)
+# exif = get_exif_data(local_file_path)
+lat, lon = "37.2222", "127.2222"
 
 # Firestore 클라이언트 가져오기
 db_fs = firestore.client()
