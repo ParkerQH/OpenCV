@@ -81,6 +81,7 @@ data = {
     "date": datetime.now(kst),
     "gpsInfo": f"{lat} {lon}",
     "imageUrl": file_url,
+    "userId": "Raspberry Pi"
 }
 
 # Firestore에 저장 (컬렉션: Report, 문서: report_id)
