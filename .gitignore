@@ -8,3 +8,4 @@ datasets/Kickboard_Brand/valid/
 serviceAccountKey.json
 config.py
 firebase_config.py
+.venv
