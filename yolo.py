@@ -23,7 +23,7 @@ CLIENT = InferenceHTTPClient(
 )
 
 
-def process_image(imageUrl, date, doc_id):
+def process_image(imageUrl, date, userId, doc_id):
     temp_annotated = None  # 초기화
     try:
         # 이미지 다운로드
@@ -131,6 +131,7 @@ def process_image(imageUrl, date, doc_id):
         doc_id = f"conclusion_{file_name.split('.')[0]}"  # 문서 ID 생성
         conclusion_data = {
             "date" : date,
+            "userId" : userId,
             "violation": traffic_violation_detection,
             "confidence": top_helmet_confidence,
             "detectedBrand": top_class,
@@ -191,7 +192,7 @@ def on_snapshot(col_snapshot, changes, read_time):
 
             if "imageUrl" in doc_data:
                 print(f"🔥 새로운 신고 감지  : {doc_id}")
-                process_image(doc_data["imageUrl"], doc_data["date"], doc_id)
+                process_image(doc_data["imageUrl"], doc_data["date"], doc_data["userId"], doc_id)
 
 
 def object_detection(predictions, img):
