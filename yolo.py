@@ -126,26 +126,6 @@ def process_image(imageUrl, date, userId, violation, doc_id):
             lon = float(lon_str)
             parcel_addr = reverse_geocode(lat, lon, api_key)
 
-        if traffic_violation_detection in ("사람 감지 실패", "킥보드 감지 실패"):
-            # Firestore에 결과 저장
-            doc_id = f"conclusion_{doc_id}"  # 문서 ID 생성
-            conclusion_data = {
-                "date" : date,
-                "userId" : userId,
-                "aiConclusion" : traffic_violation_detection,
-                "violation": violation,
-                "confidence": top_helmet_confidence,
-                "detectedBrand": top_class,
-                "imageUrl": conclusion_url,
-                "region": parcel_addr,
-                "gpsInfo": f"{lat} {lon}",
-                "result": "반려",
-                "reason": traffic_violation_detection
-            }
-            db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
-
-            print(f"✅ 분석된 사진 url : {imageUrl}\n")
-
         # Firestore에 결과 저장
         doc_id = f"conclusion_{doc_id}"  # 문서 ID 생성
         conclusion_data = {
@@ -157,9 +137,19 @@ def process_image(imageUrl, date, userId, violation, doc_id):
             "detectedBrand": top_class,
             "imageUrl": conclusion_url,
             "region": parcel_addr,
-            "gpsInfo": f"{lat} {lon}",
-            "result": "미확인"
+            "gpsInfo": f"{lat} {lon}"
         }
+
+        if traffic_violation_detection in ("사람 감지 실패", "킥보드 감지 실패"):
+            conclusion_data.update({
+                "result": "반려",
+                "reason": traffic_violation_detection
+            })
+        else :
+            conclusion_data.update({
+                "result": "미확인"
+            })
+
         db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
 
         print(f"✅ 분석된 사진 url : {imageUrl}\n")
@@ -201,9 +191,9 @@ def reverse_geocode(lat, lon, api_key):
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):
     # 초기 스냅샷은 무시 (최초 1회 실행 시 건너뜀)
-    # if not hasattr(on_snapshot, "initialized"):
-    #     on_snapshot.initialized = True
-    #     return
+    if not hasattr(on_snapshot, "initialized"):
+        on_snapshot.initialized = True
+        return
 
     for change in changes:
         if change.type.name == "ADDED":  # 새 문서가 추가될 때만 반응
