@@ -137,7 +137,8 @@ def process_image(imageUrl, date, userId, violation, doc_id):
             "detectedBrand": top_class,
             "imageUrl": conclusion_url,
             "region": parcel_addr,
-            "gpsInfo": f"{lat} {lon}"
+            "gpsInfo": f"{lat} {lon}",
+            "reportImgUrl": imageUrl
         }
 
         if traffic_violation_detection in ("사람 감지 실패", "킥보드 감지 실패"):
