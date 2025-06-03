@@ -23,7 +23,7 @@ CLIENT = InferenceHTTPClient(
 )
 
 
-def process_image(imageUrl, date, userId, doc_id):
+def process_image(imageUrl, date, userId, violation, doc_id):
     temp_annotated = None  # 초기화
     try:
         # 이미지 다운로드
@@ -65,7 +65,7 @@ def process_image(imageUrl, date, userId, doc_id):
 
                 if any(item['confidence'] > 0.1 for item in result_helmet['predictions'])  :
                     helmet_status = '착용'
-                    img = object_detection(result_helmet['predictions'], resized)
+                    img = object_detection(result_helmet['predictions'], img)
                 else:
                     helmet_status = '미착용'
                     traffic_violation_detection = '헬멧 미착용'
@@ -87,7 +87,7 @@ def process_image(imageUrl, date, userId, doc_id):
         
 
         # YOLO 분석 및 결과 표시
-        results = model(image, conf=0.8)
+        results = model(image, conf=0.3)
         annotated_image = results[0].plot()
 
         # 가장 높은 confidence 값 추출
@@ -104,8 +104,7 @@ def process_image(imageUrl, date, userId, doc_id):
 
         # 분석 이미지 저장 (Storage)
         bucket = storage.bucket()
-        file_name = imageUrl.split("/")[-1]  # URL에서 파일명 추출
-        conclusion_blob = bucket.blob(f"conclusion_raspberry/{file_name}")
+        conclusion_blob = bucket.blob(f"Conclusion/{doc_id}.jpg")
 
         # 임시 파일 생성 (분석 이미지용)
         _, temp_annotated = tempfile.mkstemp(suffix=".jpg")
@@ -116,7 +115,7 @@ def process_image(imageUrl, date, userId, doc_id):
         # 사진 지번 주소 출력
         api_key = os.getenv("VWorld_API")
         db_fs = firestore.client()
-        doc_ref = db_fs.collection("Report_Raspberry").document(doc_id)
+        doc_ref = db_fs.collection("Report").document(doc_id)
         doc = doc_ref.get()
         if doc.exists:
             doc_data = doc.to_dict()
@@ -127,12 +126,33 @@ def process_image(imageUrl, date, userId, doc_id):
             lon = float(lon_str)
             parcel_addr = reverse_geocode(lat, lon, api_key)
 
+        if traffic_violation_detection in ("사람 감지 실패", "킥보드 감지 실패"):
+            # Firestore에 결과 저장
+            doc_id = f"conclusion_{doc_id}"  # 문서 ID 생성
+            conclusion_data = {
+                "date" : date,
+                "userId" : userId,
+                "aiConclusion" : traffic_violation_detection,
+                "violation": violation,
+                "confidence": top_helmet_confidence,
+                "detectedBrand": top_class,
+                "imageUrl": conclusion_url,
+                "region": parcel_addr,
+                "gpsInfo": f"{lat} {lon}",
+                "result": "반려",
+                "reason": traffic_violation_detection
+            }
+            db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
+
+            print(f"✅ 분석된 사진 url : {imageUrl}\n")
+
         # Firestore에 결과 저장
-        doc_id = f"conclusion_{file_name.split('.')[0]}"  # 문서 ID 생성
+        doc_id = f"conclusion_{doc_id}"  # 문서 ID 생성
         conclusion_data = {
             "date" : date,
             "userId" : userId,
-            "violation": traffic_violation_detection,
+            "aiConclusion" : traffic_violation_detection,
+            "violation": violation,
             "confidence": top_helmet_confidence,
             "detectedBrand": top_class,
             "imageUrl": conclusion_url,
@@ -140,7 +160,7 @@ def process_image(imageUrl, date, userId, doc_id):
             "gpsInfo": f"{lat} {lon}",
             "result": "미확인"
         }
-        db_fs.collection("Conclusion_raspberry").document(doc_id).set(conclusion_data)
+        db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
 
         print(f"✅ 분석된 사진 url : {imageUrl}\n")
 
@@ -181,9 +201,9 @@ def reverse_geocode(lat, lon, api_key):
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):
     # 초기 스냅샷은 무시 (최초 1회 실행 시 건너뜀)
-    if not hasattr(on_snapshot, "initialized"):
-        on_snapshot.initialized = True
-        return
+    # if not hasattr(on_snapshot, "initialized"):
+    #     on_snapshot.initialized = True
+    #     return
 
     for change in changes:
         if change.type.name == "ADDED":  # 새 문서가 추가될 때만 반응
@@ -192,7 +212,7 @@ def on_snapshot(col_snapshot, changes, read_time):
 
             if "imageUrl" in doc_data:
                 print(f"🔥 새로운 신고 감지  : {doc_id}")
-                process_image(doc_data["imageUrl"], doc_data["date"], doc_data["userId"], doc_id)
+                process_image(doc_data["imageUrl"], doc_data["date"], doc_data["userId"], doc_data["violation"], doc_id)
 
 
 def object_detection(predictions, img):
@@ -223,7 +243,7 @@ if __name__ == "__main__":
     db_fs: FirestoreClient = firestore.client()
 
     # Report 컬렉션 감시 시작
-    report_col = db_fs.collection("Report_Raspberry")
+    report_col = db_fs.collection("Report")
     listener = report_col.on_snapshot(on_snapshot)
 
     print("🔥 Firestore 실시간 감지 시작 (종료: Ctrl+C) 🔥")
